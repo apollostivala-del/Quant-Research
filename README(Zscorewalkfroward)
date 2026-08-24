@@ -1,0 +1,15 @@
+Z-Score Walk-Forward Engine
+A monthly-recalibrated walk-forward validation framework for a mean-reversion signal on futures data, built around three ideas:
+No single train/test split. The strategy re-qualifies its active signal combinations every month using only trailing data, rather than being validated once on a fixed historical window.
+Adaptive exits, not fixed ones. For each qualifying signal, the exit point is re-derived monthly from realized bin-transition data — whichever exit zone produced the best mean net P&L over the trailing lookback wins, with a fallback if there isn't enough data yet.
+Explicit lookahead-bias verification. Before trusting any result, the notebook re-derives z-scores using only past data at a sample point and confirms it matches the full-series calculation, and confirms calibration never uses trades that closed after the recalibration date.
+What's withheld, and why
+This is a methodology-only version. The actual signal definitions — which z-score bin combinations qualify for entry, the exact calibration thresholds (lookback window, minimum win rate, minimum trades), and the specific exit zone candidates — are replaced with placeholder values in the config block at the top of the notebook.
+Everything downstream of that config block — the calibration loop, the adaptive exit optimizer, the walk-forward driver, the causal verification tests, the performance/Sharpe analysis — is the real, unmodified engine. The config block is the only part that encodes the actual edge, so it's the only part that changes between this version and the live one.
+How to read this if you're evaluating it
+The interesting parts to look at aren't the specific bin thresholds (those are withheld) — they're:
+How the causal-bias tests are structured, and why they're run before any result is reported
+How the calibration loop separates "does this combination currently qualify" from "did it qualify historically," so the strategy can adapt without silently overfitting to the whole history at once
+How find_optimal_exit scores candidate exits only using trades that actually reached the trailing lookback, rather than assuming a fixed exit
+Requirements
+pandas, numpy, scipy, plotly. Expects two parquet files (a primary 1-minute price series and a regime-indicator series) — set MNQ_PATH and VX_PATH in the config block to your own data.
